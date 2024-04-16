@@ -5,6 +5,7 @@ set ASAP2ToolInstallDir=C:\Program Files\Vector\ASAP2 Tool-Set 15.0\Bin
 set ASAP2ToolInstallDirString="%ASAP2ToolInstallDir%"
 set MergerExe=ASAP2Merger.exe
 set UpdaterExe=ASAP2Updater.exe
+set CreatorExe=ASAP2Creator.exe
 
 
 ::check Vector merger installation
@@ -29,11 +30,33 @@ if not exist %ASAP2ToolInstallDirString%\%UpdaterExe% (
 exit
 )
 
+::check Vector creater installation
+if not exist %ASAP2ToolInstallDirString%\%CreatorExe% (
+@ECHO.
+@ECHO !!!!!!!!!!ERROR!!!!!!!!!!
+@ECHO.
+@ECHO %CreatorExe% not found at %ASAP2ToolInstallDirString%\! Please check for valid Installation of ASAP2 Tool-Set!
+@ECHO.
+@pause
+exit
+)
+
 
 ::set environment variables for directories
 set MasterDir=01_Master
 set SlaveDir=02_Slaves
 set MergedDir=03_Merged
+set SrcDir=00_Src
+
+:: Creat 00_Src A2L from source code
+
+::print input files
+
+@ECHO.
+@ECHO Source code file:
+for /r %%f in (%SrcDir%\*.h) do @ECHO %%~nxf
+@ECHO.
+
 
 ::check if master A2L file exists
 if not exist %MasterDir%\*.a2l (
@@ -131,14 +154,6 @@ for %%a in (.\%MasterDir%\*.out) do set MapFile=%%~nxa
 
 :: convert to UTF-8
 sed -i "/ASAP2_VERSION/,$!d" .\%MergedDir%\%FihMerged%
-
-::get out file name
-for %%a in (.\%MasterDir%\*.map) do set MapFile=%%~nxa
-
-for /f "tokens=*" %%i in ('sed -n "s/.*\(0x[a-zA-Z0-9]*\)\s*_edata.*/\1/p" .\%MasterDir%\%MapFile%') do set /A EndAddress=%%i
-for /f "tokens=*" %%i in ('sed -n "s/.*CALRAM2 \"\" DATA FLASH INTERN\s*\(0x[a-zA-Z0-9]*\).*/\1/p" .\%MergedDir%\%FihMerged%') do set /A StartAddress=%%i
-set /a SizeAddress = %EndAddress%-%StartAddress%
-sed -i "s/\(.*CALRAM2 \"\" DATA FLASH INTERN\s*0x[a-zA-Z0-9]*\s*\)0x[a-zA-Z0-9]*\(.*\)/\1%SizeAddress%\2/" .\%MergedDir%\%FihMerged%
 
 ::end
 @ECHO.
