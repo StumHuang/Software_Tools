@@ -1,0 +1,14 @@
+[Unit]
+Description=Energy Management System
+Requires=network.target
+
+[Service]
+User=root
+ExecStart=/usr/local/bin/ems
+RestartSec=10
+KillMode=process
+#WatchdogSec=1s
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
