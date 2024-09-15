@@ -1,0 +1,72 @@
+<customUI onLoad="RibbonOnLoad" xmlns="http://schemas.microsoft.com/office/2006/01/customui" >
+	<ribbon >
+		<tabs >
+			<tab 
+				id="TabVstTool"
+				insertAfterMso="TabAddIns"
+				label="VST Tool">
+				<group 
+					id="customGroup1"
+					label="Build/Modify VSTs">
+					<button 
+						id="customButton1"
+						image="vst_new"
+						label="New VST"
+						screentip="New VST"
+						size="large"
+						supertip="Create a new VST by importing a new A2L and H32 file, and apply all settings in this workbook"
+						onAction="NewVstRibbon"/>
+					<button 
+						id="customButton2"
+						image="vst_batch"
+						label="Batch VST"
+						screentip="Batch VST"
+						size="large"
+						supertip="Build multiple VST files"
+						onAction="BatchVstRibbon"/>
+					<button 
+						id="customButton3"
+						image="vst"
+						label="Update VST"
+						screentip="Update VST"
+						size="large"
+						supertip="Update an existing VST file using the settings from this workbook"
+						onAction="UpdateVstRibbon"/>
+				</group >
+				<group 
+					id="customGroup2"
+					label="Settings">
+					<button 
+						id="customButton4"
+						imageMso="ImportExcel"
+						label="Copy Settings"
+						screentip="Copy Settings"
+						size="large"
+						supertip="Copy settings from another VST Tool workbook"
+						onAction="CopySettingsRibbon"/>
+					<button 
+						id="customButton5"
+						imageMso="InkEraseMode"
+						label="Clear Settings"
+						screentip="Clear Settings"
+						size="large"
+						supertip="Clear all settings in this workbook and reset to default. This will typically result in using all normal defaults for import and making no further changes to the VST."
+						onAction="ClearSettingsRibbon"/>
+				</group >
+				<group 
+					id="Group3"
+					label="Updates">
+					<labelControl 
+						id="lblStatus"
+						getLabel="getUpdateStatus"/>
+					<labelControl 
+						id="lblCurrent"
+						getLabel="getCurrentVersion"/>
+					<labelControl 
+						id="lblLatest"
+						getLabel="getLatestVersion"/>
+				</group >
+			</tab >
+		</tabs >
+	</ribbon >
+</customUI >

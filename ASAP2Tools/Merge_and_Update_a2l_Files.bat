@@ -5,8 +5,6 @@ set ASAP2ToolInstallDir=C:\Program Files\Vector\ASAP2 Tool-Set 15.0\Bin
 set ASAP2ToolInstallDirString="%ASAP2ToolInstallDir%"
 set MergerExe=ASAP2Merger.exe
 set UpdaterExe=ASAP2Updater.exe
-set CreatorExe=ASAP2Creator.exe
-
 
 ::check Vector merger installation
 if not exist %ASAP2ToolInstallDirString%\%MergerExe% (
@@ -30,33 +28,10 @@ if not exist %ASAP2ToolInstallDirString%\%UpdaterExe% (
 exit
 )
 
-::check Vector creater installation
-if not exist %ASAP2ToolInstallDirString%\%CreatorExe% (
-@ECHO.
-@ECHO !!!!!!!!!!ERROR!!!!!!!!!!
-@ECHO.
-@ECHO %CreatorExe% not found at %ASAP2ToolInstallDirString%\! Please check for valid Installation of ASAP2 Tool-Set!
-@ECHO.
-@pause
-exit
-)
-
-
 ::set environment variables for directories
 set MasterDir=01_Master
 set SlaveDir=02_Slaves
 set MergedDir=03_Merged
-set SrcDir=00_Src
-
-:: Creat 00_Src A2L from source code
-
-::print input files
-
-@ECHO.
-@ECHO Source code file:
-for /r %%f in (%SrcDir%\*.h) do @ECHO %%~nxf
-@ECHO.
-
 
 ::check if master A2L file exists
 if not exist %MasterDir%\*.a2l (
@@ -156,8 +131,36 @@ for %%a in (.\%MasterDir%\*.out) do set MapFile=%%~nxa
 sed -i "/ASAP2_VERSION/,$!d" .\%MergedDir%\%FihMerged%
 
 ::end
+
+::vst build
+@ECHO.
+@ECHO Build Vst File:
+@ECHO.
+@ECHO ELF H32 File:
+for %%a in (.\%MasterDir%\*.h32) do set H32File=%%~nxa
+@ECHO %H32File%
+
+@ECHO.
+@ECHO ELF VST Tool File:
+for /r %%f in (..\"VST_Tool"\*.xlsm) do set VST_Tool=%%~nxf
+@ECHO %VST_Tool%
+
+@ECHO.
+@ECHO VBS File:
+for /r %%f in (..\"VST_Tool"\*.vbs) do set VST_VBS=%%~nxf
+@ECHO %VST_VBS%
+
+@ECHO.
+for %%a in (.\%MergedDir%\*.a2l) do set A2LFile=%%~nxa
+cd %MergedDir%
+for /f "delims=." %%i in ('dir /b *.a2l') do set VSTFile=%%i.vst
+cd ..
+
+cscript "%~dp0\..\VST_Tool\%VST_VBS%" "%~dp0\..\VST_Tool\%VST_Tool%" "%~dp0\.\%MergedDir%\%A2LFile%" "%~dp0\.\%MasterDir%\%H32File%" "%~dp0\.\%MergedDir%\%VSTFile%"
+
+::end
 @ECHO.
 @ECHO.
-@ECHO %FihMerged% created.
+@ECHO %~dp0\%VSTFile% created.
 @ECHO.
 @pause
