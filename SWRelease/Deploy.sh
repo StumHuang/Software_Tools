@@ -1,36 +1,53 @@
-BIN="ems"
+#!/bin/bash
 
-function copy() {
-    path=$(dirname $2)
-    if [ ! -d "${path}" ]; then
-        echo "Create Dir:${path}"
-        sudo mkdir -p "${path}"
-    fi 
-    echo "Copy $1 to $2"
-    sudo cp -R "$1" "$2"
-}
+# 自动设置 CURRENT_DIR 为脚本所在目录（如果未设置）
+if [ -z "$CURRENT_DIR" ]; then
+    CURRENT_DIR=$(dirname "$(realpath "$0")")
+    echo "CURRENT_DIR is automatically set to $CURRENT_DIR"
+fi
 
-CURRENT_DIR=$(dirname $0)
+# 遍历当前目录中的所有 .out 文件
+for OUT_FILE in "$CURRENT_DIR"/*.out; do
+    # 检查文件是否存在
+    if [ ! -f "$OUT_FILE" ]; then
+        echo "No .out files found in $CURRENT_DIR"
+        continue
+    fi
 
-# 拷贝可执行文件
-copy $CURRENT_DIR/bin/x64/$BIN /usr/local/bin/$BIN
+    OUT_FILE=$(basename "$OUT_FILE")
+    OUT_SERVICE_FILE="/etc/systemd/system/${OUT_FILE}.service"
 
-# 拷贝系统服务文件
-copy $CURRENT_DIR/service/$BIN.service /etc/systemd/system/$BIN.service
-#sudo cp service/happynet.service /etc/systemd/system/
+    # 删除现有的 .out 服务（如果存在）
+    if [ -f "$OUT_SERVICE_FILE" ]; then
+        echo "Stopping and removing existing service for $OUT_FILE"
+        sudo systemctl stop "${OUT_FILE}.service"
+        sudo systemctl disable "${OUT_FILE}.service"
+        sudo rm -f "$OUT_SERVICE_FILE"
+    fi
 
-sudo systemctl stop $BIN
+    sudo chmod +x "$CURRENT_DIR/$OUT_FILE"
 
-# reload service
-sudo systemctl daemon-reload
+    # 创建新的 .out systemd 服务
+    echo "Creating systemd service for $OUT_FILE at $OUT_SERVICE_FILE"
+    sudo bash -c "cat > $OUT_SERVICE_FILE" <<EOL
+[Unit]
+Description=Service for $OUT_FILE
+After=network.target
 
-# start $ service when reboot
-sudo systemctl enable $BIN
+[Service]
+ExecStart=$CURRENT_DIR/$OUT_FILE
+Restart=always
+RestartSec=5
 
-# start BIN service status
-sudo systemctl start $BIN
+[Install]
+WantedBy=multi-user.target
+EOL
 
-# display BIN service status
-sudo systemctl status $BIN
+    # 启用并启动新的 .out 服务
+    sudo systemctl daemon-reload
+    sudo systemctl enable "${OUT_FILE}.service"
+    sudo systemctl start "${OUT_FILE}.service"
 
-copy /usr/local/bin/*.a2l $CURRENT_DIR/*.a2l
+    # 检查服务状态
+    sudo systemctl status "${OUT_FILE}.service"
+done
