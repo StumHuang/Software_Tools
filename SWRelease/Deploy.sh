@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# 解析参数
+MODE="deploy"
+while getopts "du" opt; do
+    case $opt in
+        d) MODE="deploy" ;;
+        u) MODE="undeploy" ;;
+        *) echo "Usage: $0 [-d|-u]"; exit 1 ;;
+    esac
+done
+
 # 自动设置脚本目录
 if [ -z "$CURRENT_DIR" ]; then
     CURRENT_DIR=$(dirname "$(realpath "$0")")
@@ -24,6 +34,21 @@ for OUT_PATH in "$CURRENT_DIR"/*.out; do
     OUT_FILE=$(basename "$OUT_PATH")
     OUT_SERVICE_FILE="/etc/systemd/system/${OUT_FILE}.service"
 
+    if [ "$MODE" = "undeploy" ]; then
+        # 仅移除部署
+        if [ -f "$OUT_SERVICE_FILE" ]; then
+            echo "Stopping and removing service for $OUT_FILE"
+            sudo systemctl stop "${OUT_FILE}.service"
+            sudo systemctl disable "${OUT_FILE}.service"
+            sudo rm -f "$OUT_SERVICE_FILE"
+            sudo systemctl daemon-reload
+        else
+            echo "Service file $OUT_SERVICE_FILE does not exist."
+        fi
+        continue
+    fi
+
+    # 部署流程
     # 停止并删除已有服务
     if [ -f "$OUT_SERVICE_FILE" ]; then
         echo "Stopping and removing existing service for $OUT_FILE"
